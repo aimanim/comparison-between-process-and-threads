@@ -167,18 +167,14 @@ int main()
 	ptr = fopen("MergeSortResults.txt","w");
 	int index=6;
 	fprintf(ptr,"Size,Process,Threads\n");
-	for(int i=0;i<TestCases;++i){
+	for(int i=0;i<TestCases;++i)
 		fprintf(ptr,"2^%d,%f,%f\n", index+i,nm[i],tm[i]);
-		MAX*=2;
-		}
 	fclose(ptr);
 	ptr = fopen("QuickSortResults.txt","w");
 	index=6;
 	fprintf(ptr,"Size,Process,Threads\n");
-	for(int i=0;i<TestCases;++i){
+	for(int i=0;i<TestCases;++i)
 		fprintf(ptr,"2^%d,%f,%f\n", index+i,nq[i],tq[i]);
-		MAX*=2;
-		}
 	fclose(ptr);
 	return 0;
 }
