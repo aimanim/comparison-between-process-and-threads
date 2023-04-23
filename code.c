@@ -4,7 +4,7 @@
 #include<pthread.h>
 #include<sys/types.h>
 #define THREAD_MAX 4
-#define TestCases 20
+#define TestCases 15
 int MAX;
 int *a,*b;
 void print()
@@ -108,15 +108,15 @@ int main()
 	float nm[20],tm[20],nq[20],tq[20];
 	clock_t t1, t2;
 	srand(time(NULL));
+	MAX=32;
 	for(int count=1;count<=TestCases;++count)
 	{
-		MAX = count*20;
+		MAX = MAX*2;
 		a = (int*)malloc(MAX*sizeof(int));
 		b = (int*)malloc(MAX*sizeof(int));
 		make_array();
-		printf("\n\n----------------------ArraySize: %d----------------------\n",MAX);
+		printf("\n\n----------------------ArraySize: %d----------------------",MAX);
 		set_array();
-		
 		t1 = clock();
 		merge_sort(0,MAX-1);
 		t2 = clock();
@@ -145,7 +145,7 @@ int main()
 		
 		t2 = clock();
 		tm[count-1] = (t2-t1)/(double)CLOCKS_PER_SEC;
-		printf("\nTime taken for multithreaded MergeSort: %f", tm[count-1]);
+		printf("\nTime taken for multithreaded MergeSort: %f\n", tm[count-1]);
 		
 		set_array();
 		t1 = clock();
@@ -157,19 +157,28 @@ int main()
 		merge(0,(MAX-1)/2,MAX-1);
 		t2 = clock();
 		tq[count-1] = (t2-t1)/(double)CLOCKS_PER_SEC;
-		printf("\nTime taken for multithreaded QuickSort: %f\n", tq[count-1]);
+		printf("Time taken for multithreaded QuickSort: %f\n", tq[count-1]);
 		free(a);
 		free(b);
+		
 	}
 	printf("\n");
 	FILE *ptr;
 	ptr = fopen("MergeSortResults.txt","w");
-	for(int i=0;i<TestCases;++i)
-		fprintf(ptr,"%d\t%f\t%f\n", 20*(i+1),nm[i],tm[i]);
+	int index=6;
+	fprintf(ptr,"Size,Process,Threads\n");
+	for(int i=0;i<TestCases;++i){
+		fprintf(ptr,"2^%d,%f,%f\n", index+i,nm[i],tm[i]);
+		MAX*=2;
+		}
 	fclose(ptr);
 	ptr = fopen("QuickSortResults.txt","w");
-		for(int i=0;i<TestCases;++i)
-		fprintf(ptr,"%d\t%f\t%f\n", 20*(i+1),nq[i],tq[i]);
+	index=6;
+	fprintf(ptr,"Size,Process,Threads\n");
+	for(int i=0;i<TestCases;++i){
+		fprintf(ptr,"2^%d,%f,%f\n", index+i,nq[i],tq[i]);
+		MAX*=2;
+		}
 	fclose(ptr);
 	return 0;
 }
