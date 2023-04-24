@@ -4,9 +4,9 @@
 #include<pthread.h>
 #include<sys/types.h>
 #define THREAD_MAX 4
-#define TestCases 15
+#define TestCases 11
 int MAX;
-int *a,*b;
+int *a,*b; //arrays to be sorted
 void print()
 {
 	for(int i=0;i<MAX;++i)
@@ -94,6 +94,42 @@ void *t_quick_sort(void *args)
         quickSort(pi + 1, high);
 	}
 }
+void insertion_sort()
+{
+    int i, key, j;
+    for (i = 1; i < MAX; i++) {
+        key = a[i];
+        j = i - 1;
+        while (j >= 0 && a[j] > key) {
+            a[j + 1] = a[j];
+            j--;
+        }
+        a[j + 1] = key;
+    }
+}
+void *t_insertion_sort(void *args)
+{
+    int i=(int*)args;
+    int start=i*(MAX/THREAD_MAX),
+    	end=start+(MAX/THREAD_MAX)-1,key,j;
+    	i=start;
+    while(i<=end)
+    {
+    	key=a[i];
+    	j=i-1;
+        while (j >= start && a[j] > key) {
+            a[j + 1] = a[j];
+            j--;
+        }
+        a[j + 1] = key;
+        i++;
+    }
+}
+void merge_threads(){
+	merge(0,(MAX/2-1)/2,MAX/2-1);
+	merge(MAX/2,(MAX/2+MAX-1)/2,MAX-1);
+	merge(0,(MAX-1)/2,MAX-1);
+}
 void make_array()
 {
 	for(int i=0;i<MAX;++i) b[i] = rand()%100;
@@ -105,76 +141,105 @@ void set_array()
 int main()
 {
 	pthread_t p[THREAD_MAX];
-	float nm[20],tm[20],nq[20],tq[20];
+	//arrays to store time taken for normal sorting and multithreaded sorting
+	float nm[20], tm[20]; //merge sort
+	float nq[20], tq[20]; //quick sort
+	float ni[20], ti[20]; //insertion sort
 	clock_t t1, t2;
 	srand(time(NULL));
 	MAX=32;
 	for(int count=1;count<=TestCases;++count)
 	{
-		MAX = MAX*2;
 		a = (int*)malloc(MAX*sizeof(int));
 		b = (int*)malloc(MAX*sizeof(int));
 		make_array();
-		printf("\n\n----------------------ArraySize: %d----------------------",MAX);
+		
+		//Merge Sort using process
 		set_array();
 		t1 = clock();
 		merge_sort(0,MAX-1);
 		t2 = clock();
 		nm[count-1] = (t2-t1)/(double)CLOCKS_PER_SEC;
-		printf("\nTime taken for normal merge sort: %f",nm[count-1] );
 		
-		
+		//Quick Sort using process
 		set_array();
 		t1 = clock();
 		quickSort(0,MAX-1);
 		t2 = clock();
 		nq[count-1] = (t2-t1)/(double)CLOCKS_PER_SEC;
-		printf("\nTime taken for normal quick sort: %f",nq[count-1] );
 		
+		//Insertion Sort using process
 		set_array();
 		t1 = clock();
+		insertion_sort();
+		t2 = clock();
+		ni[count-1] = (t2-t1)/(double)CLOCKS_PER_SEC;
 		
-		for(int i=0;i<4;++i)
-			pthread_create(&p[i],0,t_merge_sort,(void*)i);
-		for(int i=0;i<4;++i)
-			pthread_join(p[i],NULL);
-		
-		merge(0,(MAX/2-1)/2,MAX/2-1);
-		merge(MAX/2,(MAX/2+MAX-1)/2,MAX-1);
-		merge(0,(MAX-1)/2,MAX-1);
-		
+		//Merge Sort using threads
+		set_array();
+		t1 = clock();
+		//divide array in 4 threads
+		for(int i=0;i<4;++i) pthread_create(&p[i],0,t_merge_sort,(void*)i); 
+		for(int i=0;i<4;++i) pthread_join(p[i],NULL);
+		merge_threads(); //merge the 4 subarrays into one
 		t2 = clock();
 		tm[count-1] = (t2-t1)/(double)CLOCKS_PER_SEC;
-		printf("\nTime taken for multithreaded MergeSort: %f\n", tm[count-1]);
 		
+		//Quick Sort using threads
 		set_array();
 		t1 = clock();
+		//divide array in 4 threads
 		for(int i=0;i<THREAD_MAX;++i) pthread_create(&p[i],0,t_quick_sort,(void*)i);
 		for(int i=0;i<THREAD_MAX;++i) pthread_join(p[i],NULL);
-		
-		merge(0,(MAX/2-1)/2,MAX/2-1);
-		merge(MAX/2,(MAX/2+MAX-1)/2,MAX-1);
-		merge(0,(MAX-1)/2,MAX-1);
+		merge_threads(); //merge the 4 subarrays into one
 		t2 = clock();
 		tq[count-1] = (t2-t1)/(double)CLOCKS_PER_SEC;
-		printf("Time taken for multithreaded QuickSort: %f\n", tq[count-1]);
+		
+		//Insertion Sort using threads
+		set_array();
+		t1 = clock();
+		//divide array in 4 threads
+		for(int i=0;i<4;++i) pthread_create(&p[i],0,t_insertion_sort,(void*)i);
+		for(int i=0;i<4;++i) pthread_join(p[i],NULL);
+		merge_threads(); //merge the 4 subarrays into one
+		t2 = clock();
+		ti[count-1] = (t2-t1)/(double)CLOCKS_PER_SEC;
+		
 		free(a);
 		free(b);
-		
+		MAX = MAX*2;
 	}
 	printf("\n");
 	FILE *ptr;
 	ptr = fopen("MergeSortResults.txt","w");
-	int index=6;
+	int index=5;
 	fprintf(ptr,"Size,Process,Threads\n");
-	for(int i=0;i<TestCases;++i)
+	printf("----------------MERGE SORT----------------------\n");
+	printf("SIZE\tPROCESS\t\tTHREADS\n");
+	for(int i=0;i<TestCases;++i){
+		printf("2^%d\t%f\t%f\n", index+i,nm[i],tm[i]);
 		fprintf(ptr,"2^%d,%f,%f\n", index+i,nm[i],tm[i]);
+	}
 	fclose(ptr);
 	ptr = fopen("QuickSortResults.txt","w");
-	index=6;
+	index=5;
 	fprintf(ptr,"Size,Process,Threads\n");
-	for(int i=0;i<TestCases;++i)
+	printf("\n----------------QUICK SORT----------------------\n");
+	printf("SIZE\tPROCESS\t\tTHREADS\n");
+	for(int i=0;i<TestCases;++i){
+		printf("2^%d\t%f\t%f\n", index+i,nq[i],tq[i]);
 		fprintf(ptr,"2^%d,%f,%f\n", index+i,nq[i],tq[i]);
+	}
+	fclose(ptr);
+	ptr = fopen("InsertionSortResults.txt","w");
+	index=5;
+	fprintf(ptr,"Size,Process,Threads\n");
+	printf("\n----------------INSERTION SORT----------------------\n");
+	printf("SIZE\tPROCESS\t\tTHREADS\n");
+	for(int i=0;i<TestCases;++i){
+		printf("2^%d\t%f\t%f\n", index+i,ni[i],ti[i]);
+		fprintf(ptr,"2^%d,%f,%f\n", index+i,ni[i],ti[i]);
+	}
 	fclose(ptr);
 	return 0;
 }
