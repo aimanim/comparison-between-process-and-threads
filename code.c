@@ -3,8 +3,9 @@
 #include<unistd.h>
 #include<pthread.h>
 #include<sys/types.h>
+#include<stdbool.h>
 #define THREAD_MAX 4
-#define TestCases 11
+#define TestCases 12
 int MAX;
 int *a,*b; //arrays to be sorted
 void print()
@@ -94,6 +95,49 @@ void *t_quick_sort(void *args)
         quickSort(pi + 1, high);
 	}
 }
+int findMax(int low,int high)
+{
+	int rvalue = a[low];
+	for(int i=low;i<high;++i) rvalue = rvalue>a[i]?rvalue:a[i];
+	return rvalue;
+}
+void CountSortAscending(int low,int high,int exp)
+{
+	int size = high-low;
+	int output[size];
+	int count[10] = {0};
+	for(int i=low;i<high;++i)
+    {
+		count[a[i]/exp%10]++;
+    }
+	for(int i=1;i<10;++i)
+    {
+		count[i] += count[i-1];
+    }
+	for(int i=high-1;i>=low;--i)
+    {
+		output[--count[a[i]/exp%10]] = a[i];
+    }
+	for(int i=0;i<size;++i)
+    {
+		a[low+i] = output[i];
+    }
+}
+void RadixSort(int low,int high)
+{
+	int max = findMax(low,high);
+	for(int exponent = 1;max/exponent > 0;exponent *= 10)
+	{
+		CountSortAscending(low,high,exponent);
+	}
+}
+void *t_RadixSort(void *args)
+{
+	int part = (int*)args;
+	int low = part * (MAX/THREAD_MAX);
+	int high = (part+1)*(MAX/THREAD_MAX);
+	RadixSort(low,high);
+}
 void insertion_sort()
 {
     int i, key, j;
@@ -125,6 +169,62 @@ void *t_insertion_sort(void *args)
         i++;
     }
 }
+int getGap(int i)
+{
+	i = (i*10)/13;
+	if(i<1)
+	return 1;
+	return i;
+}
+void CombSort(int low,int high)
+{
+	int gap = (high-low);
+	bool swap = true;
+	while(gap != 1 || swap == true)
+	{
+		swap = false;
+		gap = getGap(gap);
+		for(int i=low;i<high-gap;++i)
+		{
+			if(a[i]>a[gap+i])
+			{
+				Swap(&a[i],&a[gap+i]);
+				swap = true;
+			}
+		}
+	}
+}
+void ShellSort(int low,int high)
+{
+	int size = high-low;
+	for(int gap = high/2;gap>0;gap /= 2)
+	{
+		for(int i=gap;i<high;++i)
+		{
+			int key = a[i];
+			int j;
+			for(j = i;j>=gap && a[j-gap] > key;j-=gap)
+			{
+				a[j] = a[j-gap];
+			}
+			a[j] = key;
+		}
+	}
+}
+void *t_ShellSort(void *args)
+{
+	int part = (int*)args;
+	int low = part * (MAX/THREAD_MAX);
+	int high = (part+1)*(MAX/THREAD_MAX);
+	ShellSort(low,high);
+}
+void *t_CombSort(void *args)
+{
+	int part = (int*)args;
+	int low = part * (MAX/THREAD_MAX);
+	int high = (part+1)*(MAX/THREAD_MAX);
+	CombSort(low,high);
+}
 void merge_threads(){
 	merge(0,(MAX/2-1)/2,MAX/2-1);
 	merge(MAX/2,(MAX/2+MAX-1)/2,MAX-1);
@@ -142,9 +242,12 @@ int main()
 {
 	pthread_t p[THREAD_MAX];
 	//arrays to store time taken for normal sorting and multithreaded sorting
-	float nm[20], tm[20]; //merge sort
-	float nq[20], tq[20]; //quick sort
-	float ni[20], ti[20]; //insertion sort
+	float nm[TestCases], tm[TestCases]; //merge sort
+	float nq[TestCases], tq[TestCases]; //quick sort
+	float ni[TestCases], ti[TestCases]; //insertion sort
+	float nr[TestCases], tr[TestCases]; //Radix Sort
+	float nc[TestCases], tc[TestCases]; //Comb Sort
+	float ns[TestCases], ts[TestCases]; //Shell Sort
 	clock_t t1, t2;
 	srand(time(NULL));
 	MAX=32;
@@ -174,6 +277,27 @@ int main()
 		insertion_sort();
 		t2 = clock();
 		ni[count-1] = (t2-t1)/(double)CLOCKS_PER_SEC;
+		
+		//RadixSort using process
+		set_array();
+		t1 = clock();
+		RadixSort(0,MAX);
+		t2 = clock();
+		nr[count-1] = (t2-t1)/(double)CLOCKS_PER_SEC;
+
+		//CombSort using process
+		set_array();
+		t1 = clock();
+		CombSort(0,MAX);
+		t2 = clock();
+		nc[count-1] = (t2-t1)/(double)CLOCKS_PER_SEC;
+		
+		//ShellSort using process
+		set_array();
+		t1 = clock();
+		ShellSort(0,MAX);
+		t2 = clock();
+		ns[count-1] = (t2-t1)/(double)CLOCKS_PER_SEC;
 		
 		//Merge Sort using threads
 		set_array();
@@ -205,6 +329,35 @@ int main()
 		t2 = clock();
 		ti[count-1] = (t2-t1)/(double)CLOCKS_PER_SEC;
 		
+		//Radix Sort using threads
+		set_array();
+		t1 = clock();
+		//divide array in 4 threads
+		for(int i=0;i<4;++i) pthread_create(&p[i],0,t_RadixSort,(void*)i);
+		for(int i=0;i<4;++i) pthread_join(p[i],NULL);
+		merge_threads(); //merge the 4 subarrays into one
+		t2 = clock();
+		tr[count-1] = (t2-t1)/(double)CLOCKS_PER_SEC;
+		
+		//Comb Sort using threads
+		set_array();
+		t1 = clock();
+		//divide array in 4 threads
+		for(int i=0;i<4;++i) pthread_create(&p[i],0,t_CombSort,(void*)i);
+		for(int i=0;i<4;++i) pthread_join(p[i],NULL);
+		merge_threads(); //merge the 4 subarrays into one
+		t2 = clock();
+		tc[count-1] = (t2-t1)/(double)CLOCKS_PER_SEC;
+		
+		//Shell Sort using threads
+		set_array();
+		t1 = clock();
+		//divide array in 4 threads
+		for(int i=0;i<4;++i) pthread_create(&p[i],0,t_ShellSort,(void*)i);
+		for(int i=0;i<4;++i) pthread_join(p[i],NULL);
+		merge_threads(); //merge the 4 subarrays into one
+		t2 = clock();
+		ts[count-1] = (t2-t1)/(double)CLOCKS_PER_SEC;
 		free(a);
 		free(b);
 		MAX = MAX*2;
@@ -241,5 +394,36 @@ int main()
 		fprintf(ptr,"2^%d,%f,%f\n", index+i,ni[i],ti[i]);
 	}
 	fclose(ptr);
+	ptr = fopen("RadixSortResults.txt","w");
+	index=5;
+	fprintf(ptr,"Size,Process,Threads\n");
+	printf("\n----------------RADIX SORT----------------------\n");
+	printf("SIZE\tPROCESS\t\tTHREADS\n");
+	for(int i=0;i<TestCases;++i){
+		printf("2^%d\t%f\t%f\n", index+i,nr[i],tr[i]);
+		fprintf(ptr,"2^%d,%f,%f\n", index+i,nr[i],tr[i]);
+	}
+	fclose(ptr);
+	ptr = fopen("CombSortResults.txt","w");
+	index=5;
+	fprintf(ptr,"Size,Process,Threads\n");
+	printf("\n----------------COMB SORT----------------------\n");
+	printf("SIZE\tPROCESS\t\tTHREADS\n");
+	for(int i=0;i<TestCases;++i){
+		printf("2^%d\t%f\t%f\n", index+i,nc[i],tc[i]);
+		fprintf(ptr,"2^%d,%f,%f\n", index+i,nc[i],tc[i]);
+	}
+	fclose(ptr);
+	ptr = fopen("ShellSortResults.txt","w");
+	index=5;
+	fprintf(ptr,"Size,Process,Threads\n");
+	printf("\n----------------SHELL SORT----------------------\n");
+	printf("SIZE\tPROCESS\t\tTHREADS\n");
+	for(int i=0;i<TestCases;++i){
+		printf("2^%d\t%f\t%f\n", index+i,ns[i],ts[i]);
+		fprintf(ptr,"2^%d,%f,%f\n", index+i,ns[i],ts[i]);
+	}
+	fclose(ptr);
 	return 0;
 }
+
