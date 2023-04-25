@@ -5,7 +5,7 @@
 #include<sys/types.h>
 #include<stdbool.h>
 #define THREAD_MAX 4
-#define TestCases 12
+#define TestCases 11
 int MAX;
 int *a,*b; //arrays to be sorted
 void print()
@@ -225,6 +225,24 @@ void *t_CombSort(void *args)
 	int high = (part+1)*(MAX/THREAD_MAX);
 	CombSort(low,high);
 }
+void bubble_sort()
+{
+    int i, j;
+    for (i = 0; i < MAX - 1; i++)
+        for (j = 0; j < MAX - i - 1; j++)
+        	if (a[j] > a[j + 1])
+        		Swap(&a[j], &a[j + 1]);
+}
+void *t_bubble_sort(void *args)
+{
+    int i=(int*)args;
+    int start=i*(MAX/THREAD_MAX),
+    	end=start+(MAX/THREAD_MAX)-1;
+    for (int i = start; i < end; i++)
+       for(int j=0;j<end-i;j++)
+       		if (a[j+start] > a[j+start+ 1])
+        		Swap(&a[j+start], &a[j+start+1]);
+}
 void merge_threads(){
 	merge(0,(MAX/2-1)/2,MAX/2-1);
 	merge(MAX/2,(MAX/2+MAX-1)/2,MAX-1);
@@ -248,6 +266,7 @@ int main()
 	float nr[TestCases], tr[TestCases]; //Radix Sort
 	float nc[TestCases], tc[TestCases]; //Comb Sort
 	float ns[TestCases], ts[TestCases]; //Shell Sort
+	float nb[20], tb[20]; //bubble sort
 	clock_t t1, t2;
 	srand(time(NULL));
 	MAX=32;
@@ -298,6 +317,13 @@ int main()
 		ShellSort(0,MAX);
 		t2 = clock();
 		ns[count-1] = (t2-t1)/(double)CLOCKS_PER_SEC;
+		
+		//Bubble Sort using process
+		set_array();
+		t1 = clock();
+		bubble_sort();
+		t2 = clock();
+		nb[count-1] = (t2-t1)/(double)CLOCKS_PER_SEC;
 		
 		//Merge Sort using threads
 		set_array();
@@ -358,6 +384,17 @@ int main()
 		merge_threads(); //merge the 4 subarrays into one
 		t2 = clock();
 		ts[count-1] = (t2-t1)/(double)CLOCKS_PER_SEC;
+		
+		//Bubble Sort using threads
+		set_array();
+		t1 = clock();
+		//divide array in 4 threads
+		for(int i=0;i<4;++i) pthread_create(&p[i],0,t_bubble_sort,(void*)i);
+		for(int i=0;i<4;++i) pthread_join(p[i],NULL);
+		merge_threads(); //merge the 4 subarrays into one
+		t2 = clock();
+		tb[count-1] = (t2-t1)/(double)CLOCKS_PER_SEC;
+		
 		free(a);
 		free(b);
 		MAX = MAX*2;
@@ -422,6 +459,16 @@ int main()
 	for(int i=0;i<TestCases;++i){
 		printf("2^%d\t%f\t%f\n", index+i,ns[i],ts[i]);
 		fprintf(ptr,"2^%d,%f,%f\n", index+i,ns[i],ts[i]);
+	}
+	fclose(ptr);
+	ptr = fopen("BubbleSortResults.txt","w");
+	index=5;
+	fprintf(ptr,"Size,Process,Threads\n");
+	printf("\n----------------BUBBLE SORT----------------------\n");
+	printf("SIZE\tPROCESS\t\tTHREADS\n");
+	for(int i=0;i<TestCases;++i){
+		printf("2^%d\t%f\t%f\n", index+i,nb[i],tb[i]);
+		fprintf(ptr,"2^%d,%f,%f\n", index+i,nb[i],tb[i]);
 	}
 	fclose(ptr);
 	return 0;
