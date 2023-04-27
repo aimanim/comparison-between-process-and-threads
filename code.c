@@ -422,7 +422,7 @@ int main()
 	printf("----------------MERGE SORT----------------------\n");
 	printf("SIZE\tPROCESS\t\tTHREADS\t\tMERGING OVERHEAD\n");
 	for(int i=0;i<TestCases;++i){
-		printf("2^%d\t%f\t%f\t\t%f\n", index+i,nm[i],tm[i],overhead[0][i]);
+		printf("2^%d\t%f\t%f\t%f\n", index+i,nm[i],tm[i],overhead[0][i]);
 		fprintf(ptr,"2^%d,%f,%f\n", index+i,nm[i],tm[i]);
 	}
 	fclose(ptr);
@@ -432,7 +432,7 @@ int main()
 	printf("\n----------------QUICK SORT----------------------\n");
 	printf("SIZE\tPROCESS\t\tTHREADS\t\tMERGING OVERHEAD\n");
 	for(int i=0;i<TestCases;++i){
-		printf("2^%d\t%f\t%f\t\t%f\n", index+i,nq[i],tq[i],overhead[1][i]);
+		printf("2^%d\t%f\t%f\t%f\n", index+i,nq[i],tq[i],overhead[1][i]);
 		fprintf(ptr,"2^%d,%f,%f\n", index+i,nq[i],tq[i]);
 	}
 	fclose(ptr);
@@ -442,7 +442,7 @@ int main()
 	printf("\n----------------INSERTION SORT----------------------\n");
 	printf("SIZE\tPROCESS\t\tTHREADS\t\tMERGING OVERHEAD\n");
 	for(int i=0;i<TestCases;++i){
-		printf("2^%d\t%f\t%f\t\t%f\n", index+i,ni[i],ti[i],overhead[2][i]);
+		printf("2^%d\t%f\t%f\t%f\n", index+i,ni[i],ti[i],overhead[2][i]);
 		fprintf(ptr,"2^%d,%f,%f\n", index+i,ni[i],ti[i]);
 	}
 	fclose(ptr);
@@ -452,7 +452,7 @@ int main()
 	printf("\n----------------RADIX SORT----------------------\n");
 	printf("SIZE\tPROCESS\t\tTHREADS\t\tMERGING OVERHEAD\n");
 	for(int i=0;i<TestCases;++i){
-		printf("2^%d\t%f\t%f\t\t%f\n", index+i,nr[i],tr[i],overhead[3][i]);
+		printf("2^%d\t%f\t%f\t%f\n", index+i,nr[i],tr[i],overhead[3][i]);
 		fprintf(ptr,"2^%d,%f,%f\n", index+i,nr[i],tr[i]);
 	}
 	fclose(ptr);
@@ -462,7 +462,7 @@ int main()
 	printf("\n----------------COMB SORT----------------------\n");
 	printf("SIZE\tPROCESS\t\tTHREADS\t\tMERGING OVERHEAD\n");
 	for(int i=0;i<TestCases;++i){
-		printf("2^%d\t%f\t%f\t\t%f\n", index+i,nc[i],tc[i],overhead[4][i]);
+		printf("2^%d\t%f\t%f\t%f\n", index+i,nc[i],tc[i],overhead[4][i]);
 		fprintf(ptr,"2^%d,%f,%f\n", index+i,nc[i],tc[i]);
 	}
 	fclose(ptr);
@@ -472,7 +472,7 @@ int main()
 	printf("\n----------------SHELL SORT----------------------\n");
 	printf("SIZE\tPROCESS\t\tTHREADS\t\tMERGING OVERHEAD\n");
 	for(int i=0;i<TestCases;++i){
-		printf("2^%d\t%f\t%f\t\t%f\n", index+i,ns[i],ts[i],overhead[5][i]);
+		printf("2^%d\t%f\t%f\t%f\n", index+i,ns[i],ts[i],overhead[5][i]);
 		fprintf(ptr,"2^%d,%f,%f\n", index+i,ns[i],ts[i]);
 	}
 	fclose(ptr);
@@ -482,7 +482,7 @@ int main()
 	printf("\n----------------BUBBLE SORT----------------------\n");
 	printf("SIZE\tPROCESS\t\tTHREADS\t\tMERGING OVERHEAD\n");
 	for(int i=0;i<TestCases;++i){
-		printf("2^%d\t%f\t%f\t\t%f\n", index+i,nb[i],tb[i],overhead[6][i]);
+		printf("2^%d\t%f\t%f\t%f\n", index+i,nb[i],tb[i],overhead[6][i]);
 		fprintf(ptr,"2^%d,%f,%f\n", index+i,nb[i],tb[i]);
 	}
 	fclose(ptr);
