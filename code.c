@@ -266,8 +266,9 @@ int main()
 	float nr[TestCases], tr[TestCases]; //Radix Sort
 	float nc[TestCases], tc[TestCases]; //Comb Sort
 	float ns[TestCases], ts[TestCases]; //Shell Sort
-	float nb[20], tb[20]; //bubble sort
-	clock_t t1, t2;
+	float nb[TestCases], tb[TestCases]; //bubble sort
+	float overhead[7][TestCases]; 
+	clock_t t1, t2, t3;
 	srand(time(NULL));
 	MAX=32;
 	for(int count=1;count<=TestCases;++count)
@@ -331,9 +332,11 @@ int main()
 		//divide array in 4 threads
 		for(int i=0;i<4;++i) pthread_create(&p[i],0,t_merge_sort,(void*)i); 
 		for(int i=0;i<4;++i) pthread_join(p[i],NULL);
-		merge_threads(); //merge the 4 subarrays into one
 		t2 = clock();
+		merge_threads(); //merge the 4 subarrays into one
+		t3 = clock();
 		tm[count-1] = (t2-t1)/(double)CLOCKS_PER_SEC;
+		overhead[0][count-1] = (t3-t2)/(double)CLOCKS_PER_SEC;
 		
 		//Quick Sort using threads
 		set_array();
@@ -341,19 +344,23 @@ int main()
 		//divide array in 4 threads
 		for(int i=0;i<THREAD_MAX;++i) pthread_create(&p[i],0,t_quick_sort,(void*)i);
 		for(int i=0;i<THREAD_MAX;++i) pthread_join(p[i],NULL);
-		merge_threads(); //merge the 4 subarrays into one
 		t2 = clock();
+		merge_threads(); //merge the 4 subarrays into one
+		t3 = clock();
 		tq[count-1] = (t2-t1)/(double)CLOCKS_PER_SEC;
-		
+		overhead[1][count-1] = (t3-t2)/(double)CLOCKS_PER_SEC;
+	
 		//Insertion Sort using threads
 		set_array();
 		t1 = clock();
 		//divide array in 4 threads
 		for(int i=0;i<4;++i) pthread_create(&p[i],0,t_insertion_sort,(void*)i);
 		for(int i=0;i<4;++i) pthread_join(p[i],NULL);
-		merge_threads(); //merge the 4 subarrays into one
 		t2 = clock();
+		merge_threads(); //merge the 4 subarrays into one
+		t3 = clock();
 		ti[count-1] = (t2-t1)/(double)CLOCKS_PER_SEC;
+		overhead[2][count-1] = (t3-t2)/(double)CLOCKS_PER_SEC;
 		
 		//Radix Sort using threads
 		set_array();
@@ -361,9 +368,11 @@ int main()
 		//divide array in 4 threads
 		for(int i=0;i<4;++i) pthread_create(&p[i],0,t_RadixSort,(void*)i);
 		for(int i=0;i<4;++i) pthread_join(p[i],NULL);
-		merge_threads(); //merge the 4 subarrays into one
 		t2 = clock();
+		merge_threads(); //merge the 4 subarrays into one
+		t3 = clock();
 		tr[count-1] = (t2-t1)/(double)CLOCKS_PER_SEC;
+		overhead[3][count-1] = (t3-t2)/(double)CLOCKS_PER_SEC;
 		
 		//Comb Sort using threads
 		set_array();
@@ -371,9 +380,11 @@ int main()
 		//divide array in 4 threads
 		for(int i=0;i<4;++i) pthread_create(&p[i],0,t_CombSort,(void*)i);
 		for(int i=0;i<4;++i) pthread_join(p[i],NULL);
-		merge_threads(); //merge the 4 subarrays into one
 		t2 = clock();
+		merge_threads(); //merge the 4 subarrays into one
+		t3 = clock();
 		tc[count-1] = (t2-t1)/(double)CLOCKS_PER_SEC;
+		overhead[4][count-1] = (t3-t2)/(double)CLOCKS_PER_SEC;
 		
 		//Shell Sort using threads
 		set_array();
@@ -381,9 +392,11 @@ int main()
 		//divide array in 4 threads
 		for(int i=0;i<4;++i) pthread_create(&p[i],0,t_ShellSort,(void*)i);
 		for(int i=0;i<4;++i) pthread_join(p[i],NULL);
-		merge_threads(); //merge the 4 subarrays into one
 		t2 = clock();
+		merge_threads(); //merge the 4 subarrays into one
+		t3 = clock();
 		ts[count-1] = (t2-t1)/(double)CLOCKS_PER_SEC;
+		overhead[5][count-1] = (t3-t2)/(double)CLOCKS_PER_SEC;
 		
 		//Bubble Sort using threads
 		set_array();
@@ -391,9 +404,11 @@ int main()
 		//divide array in 4 threads
 		for(int i=0;i<4;++i) pthread_create(&p[i],0,t_bubble_sort,(void*)i);
 		for(int i=0;i<4;++i) pthread_join(p[i],NULL);
-		merge_threads(); //merge the 4 subarrays into one
 		t2 = clock();
+		merge_threads(); //merge the 4 subarrays into one
+		t3 = clock();
 		tb[count-1] = (t2-t1)/(double)CLOCKS_PER_SEC;
+		overhead[6][count-1] = (t3-t2)/(double)CLOCKS_PER_SEC;
 		
 		free(a);
 		free(b);
@@ -405,9 +420,9 @@ int main()
 	int index=5;
 	fprintf(ptr,"Size,Process,Threads\n");
 	printf("----------------MERGE SORT----------------------\n");
-	printf("SIZE\tPROCESS\t\tTHREADS\n");
+	printf("SIZE\tPROCESS\t\tTHREADS\t\tMERGING OVERHEAD\n");
 	for(int i=0;i<TestCases;++i){
-		printf("2^%d\t%f\t%f\n", index+i,nm[i],tm[i]);
+		printf("2^%d\t%f\t%f\t\t%f\n", index+i,nm[i],tm[i],overhead[0][i]);
 		fprintf(ptr,"2^%d,%f,%f\n", index+i,nm[i],tm[i]);
 	}
 	fclose(ptr);
@@ -415,9 +430,9 @@ int main()
 	index=5;
 	fprintf(ptr,"Size,Process,Threads\n");
 	printf("\n----------------QUICK SORT----------------------\n");
-	printf("SIZE\tPROCESS\t\tTHREADS\n");
+	printf("SIZE\tPROCESS\t\tTHREADS\t\tMERGING OVERHEAD\n");
 	for(int i=0;i<TestCases;++i){
-		printf("2^%d\t%f\t%f\n", index+i,nq[i],tq[i]);
+		printf("2^%d\t%f\t%f\t\t%f\n", index+i,nq[i],tq[i],overhead[1][i]);
 		fprintf(ptr,"2^%d,%f,%f\n", index+i,nq[i],tq[i]);
 	}
 	fclose(ptr);
@@ -425,9 +440,9 @@ int main()
 	index=5;
 	fprintf(ptr,"Size,Process,Threads\n");
 	printf("\n----------------INSERTION SORT----------------------\n");
-	printf("SIZE\tPROCESS\t\tTHREADS\n");
+	printf("SIZE\tPROCESS\t\tTHREADS\t\tMERGING OVERHEAD\n");
 	for(int i=0;i<TestCases;++i){
-		printf("2^%d\t%f\t%f\n", index+i,ni[i],ti[i]);
+		printf("2^%d\t%f\t%f\t\t%f\n", index+i,ni[i],ti[i],overhead[2][i]);
 		fprintf(ptr,"2^%d,%f,%f\n", index+i,ni[i],ti[i]);
 	}
 	fclose(ptr);
@@ -435,9 +450,9 @@ int main()
 	index=5;
 	fprintf(ptr,"Size,Process,Threads\n");
 	printf("\n----------------RADIX SORT----------------------\n");
-	printf("SIZE\tPROCESS\t\tTHREADS\n");
+	printf("SIZE\tPROCESS\t\tTHREADS\t\tMERGING OVERHEAD\n");
 	for(int i=0;i<TestCases;++i){
-		printf("2^%d\t%f\t%f\n", index+i,nr[i],tr[i]);
+		printf("2^%d\t%f\t%f\t\t%f\n", index+i,nr[i],tr[i],overhead[3][i]);
 		fprintf(ptr,"2^%d,%f,%f\n", index+i,nr[i],tr[i]);
 	}
 	fclose(ptr);
@@ -445,9 +460,9 @@ int main()
 	index=5;
 	fprintf(ptr,"Size,Process,Threads\n");
 	printf("\n----------------COMB SORT----------------------\n");
-	printf("SIZE\tPROCESS\t\tTHREADS\n");
+	printf("SIZE\tPROCESS\t\tTHREADS\t\tMERGING OVERHEAD\n");
 	for(int i=0;i<TestCases;++i){
-		printf("2^%d\t%f\t%f\n", index+i,nc[i],tc[i]);
+		printf("2^%d\t%f\t%f\t\t%f\n", index+i,nc[i],tc[i],overhead[4][i]);
 		fprintf(ptr,"2^%d,%f,%f\n", index+i,nc[i],tc[i]);
 	}
 	fclose(ptr);
@@ -455,9 +470,9 @@ int main()
 	index=5;
 	fprintf(ptr,"Size,Process,Threads\n");
 	printf("\n----------------SHELL SORT----------------------\n");
-	printf("SIZE\tPROCESS\t\tTHREADS\n");
+	printf("SIZE\tPROCESS\t\tTHREADS\t\tMERGING OVERHEAD\n");
 	for(int i=0;i<TestCases;++i){
-		printf("2^%d\t%f\t%f\n", index+i,ns[i],ts[i]);
+		printf("2^%d\t%f\t%f\t\t%f\n", index+i,ns[i],ts[i],overhead[5][i]);
 		fprintf(ptr,"2^%d,%f,%f\n", index+i,ns[i],ts[i]);
 	}
 	fclose(ptr);
@@ -465,9 +480,9 @@ int main()
 	index=5;
 	fprintf(ptr,"Size,Process,Threads\n");
 	printf("\n----------------BUBBLE SORT----------------------\n");
-	printf("SIZE\tPROCESS\t\tTHREADS\n");
+	printf("SIZE\tPROCESS\t\tTHREADS\t\tMERGING OVERHEAD\n");
 	for(int i=0;i<TestCases;++i){
-		printf("2^%d\t%f\t%f\n", index+i,nb[i],tb[i]);
+		printf("2^%d\t%f\t%f\t\t%f\n", index+i,nb[i],tb[i],overhead[6][i]);
 		fprintf(ptr,"2^%d,%f,%f\n", index+i,nb[i],tb[i]);
 	}
 	fclose(ptr);
